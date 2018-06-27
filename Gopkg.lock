@@ -49,6 +49,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/radovskyb/watcher"
+  packages = ["."]
+  revision = "6145e1439b9de93806925353403f91d2abbad8a5"
+  version = "v1.0.2"
+
+[[projects]]
   name = "github.com/spf13/afero"
   packages = [
     ".",
@@ -115,6 +121,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fcde38298e42b45bf4ee82105bfd1d3153ff0b748f67ffb25eeb04d48ee860a0"
+  inputs-digest = "f21cbecf2f81514bc9758ad969b162397e1791ccaf1961ab3dfdaa6cecf888be"
   solver-name = "gps-cdcl"
   solver-version = 1

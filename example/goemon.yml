@@ -1,0 +1,15 @@
+delay: 500
+ext:
+    - go
+    - yml
+    - json
+    - toml
+ignore:
+    - testdata/*
+    - doc/*
+    - vendor/*
+    - '*_test.go'
+watch:
+    - .
+    - Makefile
+    - .env

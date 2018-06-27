@@ -6,6 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/gcoka/goemon/goemon"
 )
 
 var cfgFile string
@@ -19,7 +21,9 @@ func NewCmdRoot() *cobra.Command {
 		// Uncomment the following line if your bare application
 		// has an action associated with it:
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Hello goemon")
+			fmt.Println("Hello goemon", args)
+			g := goemon.New()
+			g.Start()
 		},
 	}
 	cobra.OnInitialize(initConfig)
