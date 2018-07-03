@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"os/signal"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -14,6 +16,9 @@ var cfgFile string
 
 // NewCmdRoot initialize the root command
 func NewCmdRoot() *cobra.Command {
+	opt := &goemon.Option{}
+	opt.Default()
+
 	cmd := &cobra.Command{
 		Use:   "goemon",
 		Short: "Filewatcher",
@@ -21,15 +26,32 @@ func NewCmdRoot() *cobra.Command {
 		// Uncomment the following line if your bare application
 		// has an action associated with it:
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Hello goemon", args)
-			g := goemon.New()
-			g.Start()
+			g := goemon.New(args, opt)
+			done := make(chan error)
+			go func() {
+				err := g.Start()
+				if err != nil {
+					log.Println(err)
+				}
+				close(done)
+			}()
+
+			sig := make(chan os.Signal)
+			signal.Notify(sig, os.Interrupt, os.Kill)
+
+			select {
+			case <-sig:
+			case <-done:
+			}
+
+			g.Close()
 		},
 	}
 	cobra.OnInitialize(initConfig)
 
 	cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./goemon.yaml)")
 	cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	cmd.Flags().StringSliceVarP(opt.Ext, "ext", "e", []string{}, "specify extentions")
 
 	return cmd
 }
