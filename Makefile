@@ -1,7 +1,6 @@
 
 .PHONY: example
-example:
-	$(MAKE) build-example
+example: build-example
 	make -C example start
 
 build-example:
