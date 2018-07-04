@@ -1,6 +1,5 @@
 {
     "delay": "100",
-    "legacyWatch": true,
     "watch": [".", "Makefile", ".env"],
     "ext": "go yml json toml",
     "ignore": ["testdata/*", "doc/*", "vendor/*", "*_test.go"]

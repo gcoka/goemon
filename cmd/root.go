@@ -20,12 +20,17 @@ func NewCmdRoot() *cobra.Command {
 	opt.Default()
 
 	cmd := &cobra.Command{
-		Use:   "goemon",
+		Use:   "goemon \"command to run\"",
 		Short: "Filewatcher",
 		Long:  `Filewatcher`,
+		Args:  cobra.MinimumNArgs(1),
 		// Uncomment the following line if your bare application
 		// has an action associated with it:
 		Run: func(cmd *cobra.Command, args []string) {
+			opt.WatchInterval = viper.GetInt("delay")
+			opt.Ext = viper.GetStringSlice("ext")
+
+			fmt.Println(opt)
 			g := goemon.New(args, opt)
 			done := make(chan error)
 			go func() {
@@ -49,9 +54,11 @@ func NewCmdRoot() *cobra.Command {
 	}
 	cobra.OnInitialize(initConfig)
 
-	cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./goemon.yaml)")
-	cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	cmd.Flags().StringSliceVarP(opt.Ext, "ext", "e", []string{}, "specify extentions")
+	cmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is ./goemon.yaml)")
+	cmd.Flags().UintP("delay", "d", 200, "Delay")
+	viper.BindPFlag("delay", cmd.Flags().Lookup("delay"))
+	cmd.Flags().StringSliceP("ext", "e", []string{}, "specify extentions")
+	viper.BindPFlag("ext", cmd.Flags().Lookup("ext"))
 
 	return cmd
 }
@@ -73,13 +80,14 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	} else {
 
-		viper.SetConfigName("goemon") // name of config file (without extension)
 		viper.AddConfigPath(".")      // adding current directory as first search path
+		viper.SetConfigName("goemon") // name of config file (without extension)
 	}
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		fmt.Println(viper.AllSettings())
 	}
 }

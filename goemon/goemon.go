@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/radovskyb/watcher"
@@ -11,8 +12,8 @@ import (
 
 // Option has option parameters.
 type Option struct {
-	WatchInterval uint
-	Ext           *[]string
+	WatchInterval int
+	Ext           []string
 }
 
 // Default sets default option values.
@@ -21,8 +22,18 @@ func (o *Option) Default() {
 		o.WatchInterval = 500
 	}
 	if o.Ext == nil {
-		o.Ext = new([]string)
+		o.Ext = []string{}
 	}
+}
+
+// IsTargetExt detects given ext is in option.
+func (o *Option) IsTargetExt(ext string) bool {
+	for _, v := range o.Ext {
+		if strings.TrimPrefix(v, ".") == strings.TrimPrefix(ext, ".") {
+			return true
+		}
+	}
+	return false
 }
 
 // Goemon is
@@ -40,7 +51,7 @@ func New(cmds []string, opt *Option) *Goemon {
 	opt.Default()
 
 	if opt.Ext != nil {
-		fmt.Println(*opt.Ext)
+		fmt.Println(opt.Ext)
 	}
 
 	procs := make([]*Process, 0, len(cmds))
@@ -84,15 +95,13 @@ func (g *Goemon) Start() error {
 		return err
 	}
 
-	watch := func(w *watcher.Watcher) {
+	watch := func(g *Goemon) {
 		for {
 			select {
-			case event := <-w.Event:
+			case event := <-g.watcher.Event:
 				fmt.Println(event) // Print the event's info.
 				ext := filepath.Ext(event.Path)
-				fmt.Println(ext)
-				if ext == ".go" {
-					fmt.Println()
+				if g.option.IsTargetExt(ext) {
 					for _, p := range g.processes {
 						err := p.Restart()
 						if err != nil {
@@ -101,9 +110,9 @@ func (g *Goemon) Start() error {
 					}
 				}
 
-			case err := <-w.Error:
+			case err := <-g.watcher.Error:
 				log.Fatalln(err)
-			case <-w.Closed:
+			case <-g.watcher.Closed:
 				fmt.Println("watcher closed.")
 				return
 			default:
@@ -111,7 +120,7 @@ func (g *Goemon) Start() error {
 		}
 	}
 
-	go watch(g.watcher)
+	go watch(g)
 	fmt.Println(g.watcher.WatchedFiles())
 	fmt.Println("watch interval", g.option.WatchInterval)
 	err = g.watcher.Start(time.Millisecond * time.Duration(g.option.WatchInterval))

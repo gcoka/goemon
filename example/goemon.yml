@@ -2,7 +2,6 @@ delay: 500
 ext:
     - go
     - yml
-    - json
     - toml
 ignore:
     - testdata/*
