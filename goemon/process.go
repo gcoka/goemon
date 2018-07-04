@@ -135,18 +135,13 @@ func (p *Process) Wait() error {
 
 // Restart stops current process and starts a new process.
 func (p *Process) Restart() error {
-	fmt.Println("restart begin")
 	if !p.Exited() {
 		p.Stop()
 		err := p.Wait()
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("stopped the old process")
 	}
-	time.Sleep(time.Second * 2)
-
-	fmt.Println("start a new process")
 	return p.Start()
 }
 
