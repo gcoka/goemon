@@ -3,10 +3,12 @@ package goemon
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/gobwas/glob"
 	"github.com/radovskyb/watcher"
 )
 
@@ -14,6 +16,9 @@ import (
 type Option struct {
 	WatchInterval int
 	Ext           []string
+	Watches       []string
+	Ignores       []string
+	PrintWatches  bool
 }
 
 // Default sets default option values.
@@ -23,6 +28,12 @@ func (o *Option) Default() {
 	}
 	if o.Ext == nil {
 		o.Ext = []string{}
+	}
+	if o.Watches == nil {
+		o.Watches = []string{"."}
+	}
+	if o.Ignores == nil {
+		o.Ignores = []string{"."}
 	}
 }
 
@@ -36,11 +47,13 @@ func (o *Option) IsTargetExt(ext string) bool {
 	return false
 }
 
-// Goemon is
+// Goemon is file monitor.
 type Goemon struct {
 	watcher   *watcher.Watcher
 	processes []*Process
 	option    *Option
+	watches   []glob.Glob
+	ignores   []glob.Glob
 }
 
 // New initializes Goemon watcher.
@@ -49,10 +62,6 @@ func New(cmds []string, opt *Option) *Goemon {
 		opt = &Option{}
 	}
 	opt.Default()
-
-	if opt.Ext != nil {
-		fmt.Println(opt.Ext)
-	}
 
 	procs := make([]*Process, 0, len(cmds))
 	for _, v := range cmds {
@@ -77,22 +86,37 @@ func New(cmds []string, opt *Option) *Goemon {
 		processes: procs,
 		watcher:   w,
 		option:    opt,
+		watches:   CompileGlobs(opt.Watches),
+		ignores:   CompileGlobs(opt.Ignores),
 	}
 }
 
 // Start starts watching.
 func (g *Goemon) Start() error {
 
+	wWalker := NewGlobWalker(g.watches)
+
+	for _, target := range wWalker.Walk(".") {
+		err := g.watcher.AddRecursive(target)
+		if err != nil {
+			return err
+		}
+	}
+
+	iWalker := NewGlobWalker(g.ignores)
+
+	for _, ignore := range iWalker.Walk(".") {
+		err := g.watcher.Ignore(ignore)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, p := range g.processes {
 		err := p.Start()
 		if err != nil {
 			fmt.Println(err)
 		}
-	}
-
-	err := g.watcher.AddRecursive(".")
-	if err != nil {
-		return err
 	}
 
 	watch := func(g *Goemon) {
@@ -121,10 +145,11 @@ func (g *Goemon) Start() error {
 	}
 
 	go watch(g)
-	fmt.Println(g.watcher.WatchedFiles())
-	fmt.Println("watch interval", g.option.WatchInterval)
-	err = g.watcher.Start(time.Millisecond * time.Duration(g.option.WatchInterval))
-	return err
+
+	if g.option.PrintWatches {
+		g.PrintWatchedFiles()
+	}
+	return g.watcher.Start(time.Millisecond * time.Duration(g.option.WatchInterval))
 }
 
 // Close stops watching.
@@ -133,4 +158,20 @@ func (g *Goemon) Close() {
 	for _, p := range g.processes {
 		p.Stop()
 	}
+}
+
+// PrintWatchedFiles prints
+func (g *Goemon) PrintWatchedFiles() {
+	files := g.listWatchFiles()
+	fmt.Println(files)
+}
+
+func (g *Goemon) listWatchFiles() []string {
+	files := make([]string, 0, len(g.watcher.WatchedFiles()))
+	cwd, _ := os.Getwd()
+	for k := range g.watcher.WatchedFiles() {
+		f, _ := filepath.Rel(cwd, k)
+		files = append(files, f)
+	}
+	return files
 }

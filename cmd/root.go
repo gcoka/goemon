@@ -29,6 +29,9 @@ func NewCmdRoot() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			opt.WatchInterval = viper.GetInt("delay")
 			opt.Ext = viper.GetStringSlice("ext")
+			opt.Watches = viper.GetStringSlice("watch")
+			opt.Ignores = viper.GetStringSlice("ignore")
+			opt.PrintWatches = viper.GetBool("print")
 
 			fmt.Println(opt)
 			g := goemon.New(args, opt)
@@ -59,6 +62,12 @@ func NewCmdRoot() *cobra.Command {
 	viper.BindPFlag("delay", cmd.Flags().Lookup("delay"))
 	cmd.Flags().StringSliceP("ext", "e", []string{}, "specify extentions")
 	viper.BindPFlag("ext", cmd.Flags().Lookup("ext"))
+	cmd.Flags().StringSliceP("watch", "w", []string{"."}, "watch files or directory")
+	viper.BindPFlag("watch", cmd.Flags().Lookup("watch"))
+	cmd.Flags().StringSliceP("ignore", "i", []string{""}, "ignore files or directory")
+	viper.BindPFlag("ignore", cmd.Flags().Lookup("ignore"))
+	cmd.Flags().BoolP("print", "p", false, "Print watch files")
+	viper.BindPFlag("print", cmd.Flags().Lookup("print"))
 
 	return cmd
 }

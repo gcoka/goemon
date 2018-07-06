@@ -8,6 +8,21 @@
   version = "v1.4.7"
 
 [[projects]]
+  name = "github.com/gobwas/glob"
+  packages = [
+    ".",
+    "compiler",
+    "match",
+    "syntax",
+    "syntax/ast",
+    "syntax/lexer",
+    "util/runes",
+    "util/strings"
+  ]
+  revision = "5ccd90ef52e1e632236f7326478d4faa74f99438"
+  version = "v0.2.3"
+
+[[projects]]
   branch = "master"
   name = "github.com/hashicorp/hcl"
   packages = [
@@ -121,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f21cbecf2f81514bc9758ad969b162397e1791ccaf1961ab3dfdaa6cecf888be"
+  inputs-digest = "12f727db1406afa2db2cd01f49934d48a0bb6cc6177394d8031f5e3ac24c254d"
   solver-name = "gps-cdcl"
   solver-version = 1
