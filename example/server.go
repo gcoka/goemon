@@ -10,14 +10,19 @@ import (
 	"time"
 )
 
+// Hello returns hello message.
+func Hello(name string) string {
+	return "hello " + name
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf8")
 	w.WriteHeader(200)
 
-	fmt.Println("Access from", r.UserAgent())
+	fmt.Println("[example server] Access from", r.UserAgent())
 
-	fmt.Fprintf(w, "hello %v", "world")
+	fmt.Fprintln(w, Hello("world"))
 }
 
 func startHTTPServer() *http.Server {
@@ -27,7 +32,7 @@ func startHTTPServer() *http.Server {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			log.Fatalf("Httpserver: ListenAndServe() error: %s", err)
+			log.Fatalf("[example server] Httpserver: ListenAndServe() error: %s", err)
 		}
 	}()
 	return srv
@@ -41,18 +46,18 @@ func main() {
 	)
 
 	srv := startHTTPServer()
-	fmt.Println("test server started on localhost:8080")
+	fmt.Println("[example server] test server started on localhost:8080")
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, os.Kill)
-	sig := <-quit
 
-	fmt.Println("Shutdown Server with Signal", sig)
+	sig := <-quit
+	fmt.Println("[example server] Shutdown Server with Signal", sig)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalln("Server Shutdown:", err)
+		log.Fatalln("[example server] Server Shutdown:", err)
 	}
-	log.Println("Server exiting")
+	fmt.Println("[example server] Server exiting")
 }

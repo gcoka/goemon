@@ -56,45 +56,50 @@ func (gw *GlobWalker) isTarget(path string, info os.FileInfo) bool {
 		if v.Match(rel) {
 			return true
 		}
+		if v.Match(filepath.Base(rel)) {
+			return true
+		}
 	}
 	return false
 }
 
 // Walk finds all files which matches the glob pattern.
-func (gw *GlobWalker) Walk(path string) []string {
+func (gw *GlobWalker) Walk(path string, walkFn filepath.WalkFunc) error {
 	fi, err := os.Stat(path)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if fi.Mode().IsRegular() {
 		if gw.isTarget(path, fi) {
-			return []string{path}
+			err := walkFn(path, fi, nil)
+			if err != nil {
+				return err
+			}
 		}
-		return []string{}
+		return nil
 	}
 
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	var paths []string
 	for _, file := range files {
 		p := filepath.Join(path, file.Name())
 
-		if file.IsDir() {
-			paths = append(paths, gw.Walk(p)...)
-			if gw.isTarget(p, file) {
-				paths = append(paths, p)
-				continue
-			}
-		}
 		if gw.isTarget(p, file) {
-			paths = append(paths, p)
+			walkFn(p, file, nil)
+		}
+
+		if file.IsDir() {
+			err := gw.Walk(p, walkFn)
+			if err != nil {
+				return err
+			}
 		}
 
 	}
 
-	return paths
+	return nil
 }

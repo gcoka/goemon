@@ -1,6 +1,6 @@
 BIN_NAME=example_bin
-BUILD_CMD_LOCAL=go build -o $(BIN_NAME) test.go
+BUILD_CMD_LOCAL=go build -o $(BIN_NAME) server.go
 
 .PHONY: start
 start:
-	./goemon --config goemon.yml --print "$(BUILD_CMD_LOCAL) && ./$(BIN_NAME)"
+	./goemon --config nodemon.json --print -v "$(BUILD_CMD_LOCAL) && ./$(BIN_NAME)"

@@ -1,14 +1,13 @@
-delay: 500
+delay: 1000
 ext:
     - go
     - yml
     - toml
 ignore:
-    - testdata/*
-    - doc/*
-    - vendor/*
+    - testdata/**
+    - doc
+    - vendor
     - '*_test.go'
 watch:
     - .
     - Makefile
-    - .env

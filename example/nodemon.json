@@ -1,6 +1,6 @@
 {
-    "delay": "100",
+    "delay": "2000",
     "watch": [".", "Makefile", ".env"],
     "ext": "go yml json toml",
-    "ignore": ["testdata/*", "doc/*", "vendor/*", "*_test.go"]
+    "ignore": ["example_bin", "vendor", "*_test.go"]
 }

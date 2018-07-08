@@ -1,38 +1,50 @@
-package goemon
+package goemon_test
 
 import (
 	"os"
-	"reflect"
 	"testing"
+
+	"github.com/gcoka/goemon/goemon"
 )
 
 func TestGlobWalker_Walk(t *testing.T) {
 
-	var root string
-	cwd, _ := os.Getwd()
-	defer os.Chdir(cwd)
-	os.Chdir("..")
+	tmpDir := setup(t)
+	defer os.RemoveAll(tmpDir)
 
-	root, _ = os.Getwd()
+	cDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Chdir(tmpDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(cDir)
+
 	tests := []struct {
 		name     string
 		patterns []string
 		want     []string
 	}{
-		// TODO: Add test cases.
-		{"example/*.go", []string{"example/*.go"}, []string{"example/test.go"}},
-		{"Makefile", []string{"Makefile"}, []string{"Makefile"}},
-		{"cmd/* & example/", []string{"cmd/*", "example"}, []string{"cmd/root.go", "example"}},
-		{".editorconfig", []string{".editorconfig"}, []string{".editorconfig"}},
+		{"*.go", []string{"*.go"}, []string{"main.go", "cmd/somecmd/root.go", "hello/hello.go", "vendor/github.com/somepkg-go/main.go"}},
+		{"Makefile", []string{"Makefile"}, []string{"Makefile", "vendor/github.com/somepkg-go/Makefile"}},
+		{"cmd/* hello", []string{"cmd/*", "hello"}, []string{"cmd/somecmd", "hello"}},
+		{".env", []string{".env"}, []string{".env"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gw := &GlobWalker{
-				globs: CompileGlobs(tt.patterns),
-				root:  root,
+			gw := goemon.NewGlobWalker(goemon.CompileGlobs(tt.patterns))
+			gotFiles := make([]string, 0)
+			err := gw.Walk(".", func(p string, fi os.FileInfo, e error) error {
+				gotFiles = append(gotFiles, p)
+				return nil
+			})
+			if err != nil {
+				t.Errorf("GlobWalker.Walk() returns error = %v", err)
 			}
-			if got := gw.Walk("."); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GlobWalker.Walk() = %v, want %v", got, tt.want)
+			if !deepEqualSorted(gotFiles, tt.want) {
+				t.Errorf("GlobWalker.Walk() = %v, want %v", gotFiles, tt.want)
 			}
 		})
 	}
